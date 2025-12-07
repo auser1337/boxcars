@@ -54,6 +54,9 @@ pub(crate) enum AttributeTag {
     Impulse,
     ReplicatedBoost,
     LogoData,
+    ReplicatedHandbrake,
+    ReplicatedSteer,
+    ReplicatedThrottle,
 }
 
 /// The attributes for updated actors in the network data.
@@ -111,6 +114,9 @@ pub enum Attribute {
     Impulse(Impulse),
     ReplicatedBoost(ReplicatedBoost),
     LogoData(LogoData),
+    ReplicatedHandbrake(bool),
+    ReplicatedSteer(u8),
+    ReplicatedThrottle(u8),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -570,6 +576,9 @@ impl AttributeDecoder {
             AttributeTag::Impulse => self.decode_impulse(bits),
             AttributeTag::ReplicatedBoost => self.decode_replicated_boost(bits),
             AttributeTag::LogoData => self.decode_logo_data(bits),
+            AttributeTag::ReplicatedHandbrake => self.decode_replicated_handbrake(bits),
+            AttributeTag::ReplicatedSteer => self.decode_replicated_steer(bits),
+            AttributeTag::ReplicatedThrottle => self.decode_replicated_throttle(bits),
         }
     }
 
@@ -1467,6 +1476,36 @@ impl AttributeDecoder {
             logo_id,
             swap_colors,
         }))
+    }
+
+    fn decode_replicated_handbrake(
+        &self,
+        bits: &mut LittleEndianReader<'_>,
+    ) -> Result<Attribute, AttributeError> {
+        let handbrake = bits
+            .read_bit()
+            .ok_or(AttributeError::NotEnoughDataFor("ReplicatedHandbrake"))?;
+        Ok(Attribute::ReplicatedHandbrake(handbrake))
+    }
+
+    fn decode_replicated_steer(
+        &self,
+        bits: &mut LittleEndianReader<'_>,
+    ) -> Result<Attribute, AttributeError> {
+        let steer = bits
+            .read_u8()
+            .ok_or(AttributeError::NotEnoughDataFor("ReplicatedSteer"))?;
+        Ok(Attribute::ReplicatedSteer(steer))
+    }
+
+    fn decode_replicated_throttle(
+        &self,
+        bits: &mut LittleEndianReader<'_>,
+    ) -> Result<Attribute, AttributeError> {
+        let throttle = bits
+            .read_u8()
+            .ok_or(AttributeError::NotEnoughDataFor("ReplicatedThrottle"))?;
+        Ok(Attribute::ReplicatedThrottle(throttle))
     }
 }
 
